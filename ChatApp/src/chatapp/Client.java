@@ -7,9 +7,11 @@ package chatapp;
 
 import Message.Message;
 import static chatapp.Client.sInput;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -19,7 +21,6 @@ import java.util.logging.Logger;
  *
  * @author Pc
  */
-
 class ServerListener extends Thread {
 
     @Override
@@ -31,34 +32,52 @@ class ServerListener extends Thread {
                 switch (received.type) {
 
                     case CreateRoom:
-                        Login.Login.getRooms((ArrayList<String>)received.content);
+                        Login.Login.getRooms((ArrayList<String>) received.content);
                         System.out.println("Rooms list reached from server...");
                         break;
                     case JoinRoom:
-                        ArrayList<Object> aboutRoom = (ArrayList<Object>)received.content;
-                        ChatRoom cr = Login.Login.findChatRoom((String)aboutRoom.get(0));
-                        cr.getUsers((ArrayList<String>)aboutRoom.get(1));
+                        ArrayList<Object> aboutRoom = (ArrayList<Object>) received.content;
+                        ChatRoom cr = Login.Login.findChatRoom((String) aboutRoom.get(0));
+                        cr.getUsers((ArrayList<String>) aboutRoom.get(1));
                         break;
                     case JoinServer:
                         Thread.sleep(100);
-                        Login.Login.getUsers((ArrayList<String>)received.content);
+                        Login.Login.getUsers((ArrayList<String>) received.content);
                         break;
                     case ShowRoomUsers:
                         Thread.sleep(100);
-                        Login.Login.getRoomUsers((ArrayList<String>)received.content);
+                        Login.Login.getRoomUsers((ArrayList<String>) received.content);
+                        break;
+                    case UpdateRoomUsers:
+                        ArrayList<Object> updatedRoomList = (ArrayList<Object>) received.content;
+                        ChatRoom updatedRoom = Login.Login.findChatRoom((String) updatedRoomList.get(0));
+                        updatedRoom.getUsers((ArrayList<String>) updatedRoomList.get(1));
+                        break;
+                    case ReturnRoomsNames:
+                        Login.Login.getRooms((ArrayList<String>) received.content);
+                        System.out.println("Rooms List Refreshed!");
                         break;
                     case RoomMessage:
-                        ArrayList<String> chatRoomMsg = (ArrayList<String>)received.content;
+                        ArrayList<String> chatRoomMsg = (ArrayList<String>) received.content;
                         ChatRoom chatRm = Login.Login.findChatRoom(chatRoomMsg.get(1));
                         chatRm.getMessage(chatRoomMsg.get(0), chatRoomMsg.get(2));
                         break;
                     case CreatePrivateChat:
-                        Login.Login.openPrivChat((String)received.content);
+                        Login.Login.openPrivChat((String) received.content);
                         break;
                     case PrivateMessage:
-                        String chatMate = ((ArrayList<String>)received.content).get(0);
-                        String txtMsg = ((ArrayList<String>)received.content).get(1);
+                        String chatMate = ((ArrayList<String>) received.content).get(0);
+                        String txtMsg = ((ArrayList<String>) received.content).get(1);
                         Login.Login.findPrivChat(chatMate).getMessage(txtMsg);
+                        break;
+                    case SendFile:
+                        ArrayList<Object> fileArr = (ArrayList<Object>) received.content;
+                        String file = System.getProperty("user.home") + "/Downloads/" + Login.Login.userName + (String) fileArr.get(1);
+                        byte[] mybytearray = (byte[]) fileArr.get(2);
+                        OutputStream os = new FileOutputStream(file);
+                        os.write(mybytearray);
+                        System.out.println((String) fileArr.get(1) + " geldi.");
+                        os.close();
                         break;
                 }
 
@@ -79,7 +98,6 @@ public class Client {
     public static ObjectInputStream sInput;
     public static ObjectOutputStream sOutput;
     public static ServerListener listenMe;
-    
 
     public static void Start(String ip, int port, String userName) {
         try {

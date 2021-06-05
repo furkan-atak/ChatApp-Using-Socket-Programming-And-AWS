@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -61,9 +62,38 @@ public class ClientListener extends Thread {
                             }
                             System.out.println("User " + TheClient.name + " is joining the room named " + room.roomName);
                             break;
+                        case ReturnRoomsNames:
+                            ArrayList<String> theRoomList = new ArrayList<>();
+                            for (Room theRoom : Server.rooms) {
+                                theRoomList.add(theRoom.roomName);
+                            }
+                            Message roomListToNewy = new Message(Message.Message_Type.ReturnRoomsNames);
+                            roomListToNewy.content = theRoomList;
+                            Server.Send(TheClient, roomListToNewy);
+                            break;
                         case ShowRoomUsers:
                             Room roomUsrs = Server.findRoom((String)msg.content); 
-                            Server.bcRoomUsers(roomUsrs);
+                            Server.bcRoomUsers(roomUsrs, TheClient);
+                            break;
+                        case UpdateRoomUsers:
+                            ArrayList<String> updateList = (ArrayList<String>) msg.content;
+                            ArrayList<Object> updateRoomList = new ArrayList<>();
+                            Room updatedRoom = Server.findRoom(updateList.get(0));
+                            updatedRoom.clients.remove(Server.findClient(updateList.get(1)));
+                            updateRoomList.add(updatedRoom.roomName);
+                            ArrayList<String> updatedNames = new ArrayList<>();
+                            for (Client theClient : updatedRoom.clients) {
+                                updatedNames.add(theClient.name);
+                            }
+                            updateRoomList.add(updatedNames);
+                            Message updateR = new Message(Message.Message_Type.UpdateRoomUsers);
+                            updateR.content = updateRoomList;
+                            for (Client client : updatedRoom.clients) {
+                                Server.Send(client, updateR);
+                            }
+                            for (Client theClient : Server.Clients) {
+                                Server.bcRoomUsers(updatedRoom, TheClient);
+                            }
                             break;
                         case RoomMessage:
                             ArrayList<String> roomMsg = (ArrayList<String>) msg.content;
@@ -79,6 +109,10 @@ public class ClientListener extends Thread {
                         case PrivateMessage:
                             Client c = Server.findClient(((ArrayList<String>) msg.content).get(0));
                             Server.Send(c, msg);
+                            break;
+                        case SendFile:
+                            Client sendedClient = Server.findClient((String)(((ArrayList<Object>) msg.content).get(0)));
+                            Server.Send(sendedClient, msg);
                             break;
                     }
 
@@ -111,9 +145,8 @@ class NewClientListener extends Thread {
 
                 Server.IdClient++;
                 Server.Clients.add(nclient);
-
                 nclient.listenThread.start();
-
+                
             } catch (IOException ex) {
                 Logger.getLogger(NewClientListener.class.getName()).log(Level.SEVERE, null, ex);
             }

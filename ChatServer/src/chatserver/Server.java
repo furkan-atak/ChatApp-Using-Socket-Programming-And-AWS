@@ -11,6 +11,7 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 
 /**
@@ -33,8 +34,12 @@ public class Server {
 
             Server.runThread = new NewClientListener();
             Server.runThread.start();
-
+            String first = "SERVER IS RUNNING!";
+            String sec = "Server Closes When This App Closed!";
+            Start.start.setLabels(first, sec);
+            JOptionPane.showMessageDialog(null,"SERVER SUCCESSFULLY STARTED!","Server Info",1);
         } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null,"SERVER CANNOT STARTED!","Server Info",1);
             Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -49,7 +54,6 @@ public class Server {
         }
     }
 
-    
     public static void bcastUsers(){
         ArrayList<String> clientList = new ArrayList<>();
         
@@ -99,16 +103,14 @@ public class Server {
         }
     }
     
-    public static void bcRoomUsers(Room room){
+    public static void bcRoomUsers(Room room, Client c){
         ArrayList<String> roomUsrs = new ArrayList<>();
         for (Client client : room.clients) {
             roomUsrs.add(client.name);
         }
         Message theMsg = new Message(Message.Message_Type.ShowRoomUsers);
         theMsg.content = roomUsrs;
-        for (Client client : Clients) {
-            Send(client, theMsg);
-        }
+        Send(c, theMsg);
     }
     
     public static Client findClient(String userName){

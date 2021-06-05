@@ -12,7 +12,8 @@ package Message;
 public class Message implements java.io.Serializable {
 
     public static enum Message_Type {
-        JoinServer, CreateRoom, ReturnRoomsNames, JoinRoom, Start, RoomMessage, CreatePrivateChat, PrivateMessage, ShowRoomUsers
+        JoinServer, CreateRoom, ReturnRoomsNames, JoinRoom, Start, RoomMessage, CreatePrivateChat, PrivateMessage,
+        ShowRoomUsers, SendFile, UpdateRoomUsers
     }
 
     public Message_Type type;
