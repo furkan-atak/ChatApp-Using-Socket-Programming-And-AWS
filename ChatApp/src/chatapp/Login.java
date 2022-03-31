@@ -395,7 +395,7 @@ public class Login extends javax.swing.JFrame {
         if (clicked) {
             userTxt.setEditable(false);
             this.userName = userTxt.getText();
-            Client.Start("localhost", 2000, this.userName);
+            Client.Start("localhost", 2000, this.userName);  // your server's ip adress goes here. If you dont have a server localhost works fine.
             clicked = false;
         }else{
             JOptionPane.showMessageDialog(null,"Already Connected!","Connection Exist",1);
